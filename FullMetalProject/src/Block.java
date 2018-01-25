@@ -1,22 +1,102 @@
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class Block {
 	private int index;
-	private int difficulty;
+	private String previousHash;
 	private Timestamp timestamp;
+	private String data;
+	private String hash;
+	private int difficulty;
+	private int nonce;
 
 	// CONSTANTS
 	private final int BLOCK_GENERATION_INTERVAL = 10; // In seconds
 	private final int DIFFICULTY_ADJUSTMENT_INTERVAL = 10; // In blocks
 
-	Block(int index, Timestamp timestamp) {
+	Block(int index, String hash, String previousHash, Timestamp timestamp, String data, int difficulty, int nonce) {
 		this.index = index;
+		this.previousHash = previousHash;
 		this.timestamp = timestamp;
+		this.data = data;
+		this.hash = hash;
+		this.difficulty = difficulty;
+		this.nonce = nonce;
 	}
 
 	public static void main(String[] args) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+		Block genesisBlock = new Block(0, "", "00006534932c2b7154000da6afc367695e6337db8a921823784c14378abed4f7d7",
+				currentTime, "my genesis block!!", 3, 1);
+	}
+
+	private String bytesToHex(byte[] hash) {
+		StringBuffer hexString = new StringBuffer();
+		for (int i = 0; i < hash.length; i++) {
+			String hex = Integer.toHexString(0xff & hash[i]);
+			if (hex.length() == 1)
+				hexString.append('0');
+			hexString.append(hex);
+		}
+		return hexString.toString();
+	}
+
+	private String hexToBinary(String hash) {
+		return "";
+	}
+
+	private boolean hashMatchesDifficulty(String hash, int difficulty) {
+		String hashInBinary = hexToBinary(hash);
+		String requiredPrefix = repeat(difficulty);
+		return hashInBinary.startsWith(requiredPrefix);
+	}
+
+	private String repeat(int difficulty) {
+		String result = "";
+		for (int i = 0; i < difficulty; i++) {
+			result = result + "0";
+		}
+		return result;
+	}
+
+	// Mining a block without reward
+	private Block findBlock(int number, String previousHash, Timestamp timestamp, String data)
+			throws NoSuchAlgorithmException {
+		Block newBlock = null;
+		int nonce = 0;
+		boolean blockConstruced = false;
+
+		while (!blockConstruced) {
+			String hash = calculateHash(index, previousHash, timestamp, data, difficulty, nonce);
+
+			if (hashMatchesDifficulty(hash, difficulty)) {
+				return new Block(index, hash, previousHash, timestamp, data, difficulty, nonce);
+			}
+
+			nonce++;
+		}
+
+		return newBlock;
+	}
+
+	private String calculateHash(int index, String previousHash, Timestamp timestamp, String data, int difficulty,
+			int nonce) throws NoSuchAlgorithmException {
+
+		String text = index + previousHash + timestamp + data + difficulty + nonce;
+
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
+		return bytesToHex(hash).toString();
 
 	}
 
@@ -71,8 +151,13 @@ public class Block {
 		Timestamp currentTimestamp = new Timestamp(date.getTime());
 		long currentTimeInSeconds = TimeUnit.MILLISECONDS.toSeconds(currentTimestamp.getTime());
 
-		return (previousBlockTimeInSeconds < newBlockTimeInSeconds)
-				&& newBlockTimeInSeconds - 60 < currentTimeInSeconds;
+		if (newBlockTimeInSeconds - previousBlockTimeInSeconds > 60) {
+			if (currentTimeInSeconds - newBlockTimeInSeconds > 60) {
+				return true;
+			}
+
+		}
+		return false;
 	}
 
 }
