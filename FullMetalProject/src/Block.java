@@ -29,15 +29,36 @@ public class Block {
 	}
 
 	public static void main(String[] args) {
+		Date date = new Date();
+		Timestamp currentTimestamp = new Timestamp(date.getTime());
+
+		Block genesisBlock = new Block(0, NSConstants.EMPTY_STRING, NSConstants.EMPTY_STRING, currentTimestamp,
+				"This is my first genesis block!", 3, 1);
+
 		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			// 1. Get instance of MessageDigest.
+			MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+
+			// 2. Get original string. SHA-256 is not encoding, it's a one-way
+			// hash.
+			String originalString = "Password.123";
+
+			// 2. Use StandardCharsets instead of the string literal "UTF_8",
+			// one
+			// less checked exception to worry about.
+			byte[] arrayOfPasswordByte = originalString.getBytes(StandardCharsets.UTF_8);
+
+			// 3. Get the hash value in terms of arbitrary array of binary.
+			byte[] encodedhash = messageDigest.digest(arrayOfPasswordByte);
+
+			// 4. Get the String format for the provided hash value.
+			String hashValueInStrFormat = genesisBlock.bytesToHex(encodedhash);
+			System.out.println(hashValueInStrFormat);
+
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-		Block genesisBlock = new Block(0, "", "00006534932c2b7154000da6afc367695e6337db8a921823784c14378abed4f7d7",
-				currentTime, "my genesis block!!", 3, 1);
+
 	}
 
 	private String bytesToHex(byte[] hash) {
