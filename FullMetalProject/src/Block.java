@@ -35,41 +35,6 @@ public class Block {
 		Block genesisBlock = new Block(0, NSConstants.EMPTY_STRING, NSConstants.EMPTY_STRING, currentTimestamp,
 				"This is my first genesis block!", 3, 1);
 
-		try {
-			// 1. Get instance of MessageDigest.
-			MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-
-			// 2. Get original string. SHA-256 is not encoding, it's a one-way
-			// hash.
-			String originalString = "Password.123";
-
-			// 2. Use StandardCharsets instead of the string literal "UTF_8",
-			// one
-			// less checked exception to worry about.
-			byte[] arrayOfPasswordByte = originalString.getBytes(StandardCharsets.UTF_8);
-
-			// 3. Get the hash value in terms of arbitrary array of binary.
-			byte[] encodedhash = messageDigest.digest(arrayOfPasswordByte);
-
-			// 4. Get the String format for the provided hash value.
-			String hashValueInStrFormat = genesisBlock.bytesToHex(encodedhash);
-			System.out.println(hashValueInStrFormat);
-
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	private String bytesToHex(byte[] hash) {
-		StringBuffer hexString = new StringBuffer();
-		for (int i = 0; i < hash.length; i++) {
-			String hex = Integer.toHexString(0xff & hash[i]);
-			if (hex.length() == 1)
-				hexString.append('0');
-			hexString.append(hex);
-		}
-		return hexString.toString();
 	}
 
 	private String hexToBinary(String hash) {
@@ -117,7 +82,7 @@ public class Block {
 
 		MessageDigest digest = MessageDigest.getInstance("SHA-256");
 		byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
-		return bytesToHex(hash).toString();
+		return CommonMethods.bytesToHex(hash).toString();
 
 	}
 
